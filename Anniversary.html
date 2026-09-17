@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Four years, still us</title>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700&display=swap');
+
+		:root {
+			--ink: #271e27;
+			--muted: #756772;
+			--paper: #fff9f3;
+			--rose: #ee6f65;
+			--coral: #ff9b83;
+			--sun: #ffd365;
+			--blue: #b7d8d7;
+			--line: rgba(39, 30, 39, .14);
+		}
+
+		* { box-sizing: border-box; }
+		html { scroll-behavior: smooth; }
+		body {
+			margin: 0;
+			color: var(--ink);
+			background: var(--paper);
+			font-family: Manrope, sans-serif;
+			overflow-x: hidden;
+			transition: background-color .9s ease;
+		}
+		body.intro-locked { overflow: hidden; }
+		body.red-stage { background: #eb655d; }
+		button { font: inherit; }
+		.intro-screen { position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; overflow: hidden; background: #f6c5ab; transition: opacity .8s ease, visibility .8s ease; }
+		.intro-screen.leaving { opacity: 0; visibility: hidden; pointer-events: none; }
+		body.revealed .polaroid-gallery { opacity: 1; transform: translateY(0); }
+		.intro-screen:before { content: ''; position: absolute; inset: 8%; border: 1px solid rgba(39,30,39,.2); transform: rotate(-2deg); }
+		.intro-screen:after { content: ''; position: absolute; width: min(54vw, 650px); aspect-ratio: 1; border: 1px solid rgba(39,30,39,.18); border-radius: 50%; transform: rotate(18deg) scaleY(.43); animation: intro-orbit 9s linear infinite; }
+		.intro-copy { position: relative; z-index: 2; width: min(850px, 88vw); text-align: center; }
+		.intro-kicker { font: 500 .72rem 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .2em; color: var(--rose); animation: intro-rise .9s ease both; }
+		.intro-title { margin: 22px 0 30px; font: 400 clamp(4rem, 12vw, 10rem)/.82 'DM Serif Display', serif; letter-spacing: -.055em; animation: intro-title-settle 1.25s .12s cubic-bezier(.2,.8,.2,1) both; }
+		.intro-title em { display: block; color: var(--rose); }
+		.intro-prompt { border: 1px solid var(--ink); background: var(--paper); color: var(--ink); padding: 15px 24px; cursor: pointer; text-transform: uppercase; letter-spacing: .13em; font: 500 .7rem 'DM Mono', monospace; box-shadow: 5px 5px 0 var(--ink); animation: intro-rise 1s .3s ease both, button-breathe 2.3s 1.5s ease-in-out infinite; }
+		.intro-prompt:hover { background: var(--sun); transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--ink); }
+		.intro-orbit { position: absolute; z-index: 1; width: min(30vw, 360px); aspect-ratio: 1; border: 2px solid var(--sun); border-radius: 50%; top: 14%; right: 12%; animation: intro-float 5s ease-in-out infinite; }
+		.intro-orbit:after { content: '✦'; position: absolute; right: -14px; top: 18%; color: var(--rose); font-size: 1.8rem; }
+		.intro-stamp { position: absolute; z-index: 2; left: 12%; bottom: 14%; width: 82px; aspect-ratio: 1; display: grid; place-items: center; border: 1px solid var(--ink); border-radius: 50%; font: 1.8rem 'DM Serif Display', serif; transform: rotate(-14deg); animation: intro-float 4.5s .4s ease-in-out infinite; }
+		.intro-corner { position: absolute; z-index: 2; color: var(--muted); font: .62rem 'DM Mono', monospace; letter-spacing: .12em; text-transform: uppercase; }
+		.intro-corner.top { top: 12%; left: 12%; }.intro-corner.bottom { right: 12%; bottom: 14%; text-align: right; }
+		.intro-spark { position: absolute; z-index: 2; color: var(--rose); font-size: 1.6rem; animation: intro-float 3.8s ease-in-out infinite; }.spark-a { top: 27%; left: 22%; }.spark-b { right: 23%; bottom: 28%; animation-delay: .7s; }.spark-c { left: 31%; bottom: 17%; color: var(--sun); animation-delay: 1.1s; }
+		.intro-piece { position: absolute; top: -12vh; left: var(--left); color: var(--color); font-size: var(--size); line-height: 1; animation: intro-fall var(--duration) var(--delay) linear infinite; transform: rotate(var(--rotate)); }
+		.intro-piece.heart { position: absolute; left: var(--left); top: -12vh; width: auto; aspect-ratio: auto; background: none; font-size: var(--size); color: var(--color); filter: none; }
+		@keyframes intro-rise { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+		@keyframes intro-title-settle { 0% { opacity: 0; transform: scale(1.55) translateY(18px); } 55% { opacity: 1; transform: scale(.96) translateY(0); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+		@keyframes intro-orbit { from { transform: rotate(18deg) scaleY(.43); } to { transform: rotate(378deg) scaleY(.43); } }
+		@keyframes intro-float { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-12px) rotate(4deg); } }
+		@keyframes button-breathe { 0%, 100% { box-shadow: 5px 5px 0 var(--ink); } 50% { box-shadow: 8px 8px 0 var(--ink); } }
+		@keyframes intro-fall { 0% { transform: translate3d(0, -15vh, 0) rotate(0deg); opacity: 0; } 12% { opacity: .95; } 100% { transform: translate3d(var(--drift), 125vh, 0) rotate(680deg); opacity: .1; } }
+		.grain {
+			position: fixed; inset: 0; pointer-events: none; opacity: .045; z-index: 20;
+			background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.7'/%3E%3C/svg%3E");
+		}
+		.ambient-layer {
+			position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden;
+		}
+		.ambient-orb {
+			position: absolute; border-radius: 50%; filter: blur(14px); opacity: .42; animation: drift 18s ease-in-out infinite alternate;
+		}
+		.orb-1 { width: 420px; height: 420px; background: rgba(255, 211, 101, .35); top: -10%; left: -5%; }
+		.orb-2 { width: 360px; height: 360px; background: rgba(183, 216, 215, .4); bottom: 8%; right: -4%; animation-delay: 1.2s; }
+		.orb-3 { width: 520px; height: 520px; background: rgba(238, 111, 101, .22); top: 30%; right: 18%; animation-delay: 2.3s; }
+		.float-badge {
+			position: absolute; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 50%; border: 1px solid rgba(39,30,39,.22); color: var(--ink); background: rgba(255,255,255,.38); box-shadow: 0 10px 20px rgba(39,30,39,.06);
+			font: 1.45rem 'DM Serif Display', serif; animation: badge-float 7s ease-in-out infinite;
+		}
+		.badge-1 { top: 11%; left: 10%; transform: rotate(-12deg); }
+		.badge-2 { top: 22%; right: 12%; transform: rotate(16deg); animation-delay: .8s; }
+		.badge-3 { bottom: 20%; left: 15%; transform: rotate(-18deg); animation-delay: 1.4s; }
+		.badge-4 { bottom: 12%; right: 18%; transform: rotate(10deg); animation-delay: 2s; }
+		.badge-5 { top: 52%; left: 8%; transform: rotate(8deg); animation-delay: 2.7s; }
+		.badge-6 { top: 58%; right: 10%; transform: rotate(-10deg); animation-delay: 3.3s; }
+		@keyframes drift {
+			0% { transform: translate3d(0, 0, 0) scale(1); }
+			50% { transform: translate3d(24px, 18px, 0) scale(1.08); }
+			100% { transform: translate3d(-18px, 12px, 0) scale(.98); }
+		}
+		@keyframes badge-float {
+			0%, 100% { transform: translateY(0) rotate(var(--spin, 0deg)); }
+			50% { transform: translateY(-16px) rotate(calc(var(--spin, 0deg) + 7deg)); }
+		}
+		@keyframes chibi-bob {
+			0%, 100% { transform: translateY(0) rotate(-2deg); }
+			50% { transform: translateY(-10px) rotate(2deg); }
+		}
+		@keyframes chibi-blink {
+			0%, 44%, 48%, 100% { transform: scaleY(1); }
+			46% { transform: scaleY(.12); }
+		}
+		@keyframes sticker-pop {
+			0%, 100% { transform: scale(1) rotate(-8deg); }
+			50% { transform: scale(1.12) rotate(8deg); }
+		}
+		.chibi {
+			position: fixed; z-index: 4; width: 78px; height: 96px; pointer-events: none; animation: chibi-bob 4.5s ease-in-out infinite;
+		}
+		.chibi.left { left: 3vw; bottom: 8vh; }
+		.chibi.right { right: 3vw; top: 28vh; animation-delay: 1.2s; }
+		.chibi-head { position: absolute; left: 8px; top: 0; width: 62px; height: 58px; border: 2px solid var(--ink); border-radius: 48% 48% 44% 44%; background: var(--paper); box-shadow: 4px 5px 0 rgba(39,30,39,.12); }
+		.chibi-head::before { content: ''; position: absolute; left: 5px; top: -9px; width: 48px; height: 24px; border: 2px solid var(--ink); border-bottom: 0; border-radius: 50% 50% 0 0; background: var(--ink); transform: rotate(-5deg); }
+		.chibi-face { position: absolute; inset: 25px 13px 10px; }
+		.chibi-face::before { content: ''; display: block; width: 6px; height: 10px; margin-left: 5px; border-radius: 50%; background: var(--ink); box-shadow: 20px 0 0 var(--ink); transform-origin: center; animation: chibi-blink 5s ease-in-out infinite; }
+		.chibi-face::after { content: 'ᴗ'; display: block; margin-top: 1px; color: var(--rose); font: 1.2rem/1 'DM Serif Display', serif; text-align: center; }
+		.chibi-body { position: absolute; left: 18px; top: 55px; width: 48px; height: 38px; border: 2px solid var(--ink); border-radius: 50% 50% 28% 28%; background: var(--rose); }
+		.chibi-body::before, .chibi-body::after { content: ''; position: absolute; top: 5px; width: 18px; height: 8px; border-top: 2px solid var(--ink); }
+		.chibi-body::before { left: -14px; transform: rotate(28deg); }.chibi-body::after { right: -14px; transform: rotate(-28deg); }
+		.gallery-chibi { position: absolute; left: 1%; bottom: 6%; z-index: 6; transform: scale(.9); transform-origin: bottom left; }
+		.gallery-chibi .chibi-body { background: var(--sun); }
+		.gallery-sticker { animation: sticker-pop 3.8s ease-in-out infinite; }
+		.gallery-sticker.heart { animation-delay: .8s; }.gallery-sticker.paw { animation-delay: 1.5s; }
+		@media (prefers-reduced-motion: reduce) {
+			*, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+		}
+		@keyframes shimmer {
+			0% { opacity: .45; transform: translateY(0) scale(.94); }
+			50% { opacity: 1; transform: translateY(-9px) scale(1.03); }
+			100% { opacity: .5; transform: translateY(0) scale(.96); }
+		}
+		.topbar {
+			display: flex; justify-content: space-between; align-items: center; padding: 26px 5vw;
+			border-bottom: 1px solid var(--line); position: relative; z-index: 3;
+		}
+		.brand { font-family: 'DM Mono', monospace; font-size: .72rem; letter-spacing: .14em; text-transform: uppercase; }
+		.year { color: var(--muted); font-size: .78rem; }
+		.hero { min-height: 100vh; padding: 7vh 5vw 5vh; position: relative; display: flex; flex-direction: column; }
+
+		/* ---- memory scene (falling polaroid -> pop -> letter) ---- */
+		.memory-scene {
+			position: fixed; inset: 0; overflow: hidden; opacity: 0; visibility: hidden; pointer-events: none;
+			transition: opacity .7s ease, visibility .7s ease; z-index: 25; perspective: 1400px;
+		}
+		body.red-stage .memory-scene { opacity: 1; visibility: visible; pointer-events: auto; }
+		.memory-card {
+			position: fixed; left: 50%; top: 0; width: 220px; background: #fffdf8; padding: 12px 12px 16px; box-shadow: 8px 12px 0 rgba(39,30,39,.12);
+			cursor: pointer; transform: translateX(-50%) translateY(-110vh) rotate(-18deg); animation: memory-fall 1.8s cubic-bezier(.17,.84,.38,1) .15s both; will-change: transform, opacity;
+		}
+		.memory-card.popping { animation: memory-pop .55s cubic-bezier(.4,0,.2,1) forwards; pointer-events: none; }
+		.memory-photo {
+			height: 160px; display: grid; place-items: center; background: linear-gradient(135deg, #f4d27a, #e77c6b 60%, #b6dcd9 60%);
+			font-size: 4rem; color: rgba(39,30,39,.72); border: 1px solid rgba(39,30,39,.18); position: relative; overflow: hidden;
+		}
+		.memory-photo:after { content: ''; position: absolute; inset: 18px; border: 1px solid rgba(39,30,39,.2); }
+		.memory-caption { display: block; margin-top: 12px; text-align: center; font: 600 .68rem 'DM Mono', monospace; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+		.memory-card:before { content: ''; position: absolute; left: 50%; top: -34px; width: 2px; height: 38px; background: rgba(39,30,39,.35); transform: translateX(-50%); animation: string-sway 1.8s cubic-bezier(.17,.84,.38,1) .15s both; }
+		@keyframes memory-fall {
+			0% { opacity: 0; transform: translateX(-50%) translateY(-110vh) rotate(-18deg) scale(.7); }
+			18% { opacity: 1; }
+			55% { opacity: 1; transform: translateX(-50%) translateY(24vh) rotate(7deg) scale(1.04); }
+			75% { opacity: 1; transform: translateX(-50%) translateY(30vh) rotate(-4deg) scale(1.02); }
+			100% { opacity: 1; transform: translateX(-50%) translateY(32vh) rotate(0deg) scale(1); }
+		}
+		@keyframes string-sway {
+			0% { opacity: 0; transform: translateX(-50%) rotate(-22deg); }
+			18% { opacity: 1; }
+			60% { transform: translateX(-50%) rotate(10deg); }
+			100% { opacity: 1; transform: translateX(-50%) rotate(0deg); }
+		}
+		@keyframes memory-pop {
+			0% { transform: translateX(-50%) translateY(32vh) rotate(0deg) scale(1); opacity: 1; }
+			35% { transform: translateX(-50%) translateY(31vh) rotate(-9deg) scale(1.2); opacity: 1; }
+			100% { transform: translateX(-50%) translateY(30vh) rotate(12deg) scale(1.55); opacity: 0; }
+		}
+
+		.burst-layer { position: fixed; inset: 0; z-index: 26; pointer-events: none; }
+		.burst-piece {
+			position: absolute; left: 50%; transform: translate(-50%, -50%); font-size: var(--bsize); color: var(--bcolor);
+			animation: burst-out .8s ease-out forwards;
+		}
+		@keyframes burst-out {
+			0% { transform: translate(-50%, -50%) translate(0, 0) scale(.55); opacity: 1; }
+			100% { transform: translate(-50%, -50%) translate(var(--bx), var(--by)) scale(1.15); opacity: 0; }
+		}
+
+		.memory-letter {
+			position: fixed; left: 50%; top: 0; width: min(430px, 86vw); transform: translateX(-50%) translateY(28vh) scale(.6) rotateX(35deg);
+			transform-origin: top center; opacity: 0; pointer-events: none;
+		}
+		.memory-letter.visible { animation: letter-unfold .85s cubic-bezier(.19,1,.22,1) forwards; pointer-events: auto; }
+		@keyframes letter-unfold {
+			0% { opacity: 0; transform: translateX(-50%) translateY(28vh) scale(.6) rotateX(35deg); }
+			60% { opacity: 1; transform: translateX(-50%) translateY(25vh) scale(1.03) rotateX(0deg); }
+			100% { opacity: 1; transform: translateX(-50%) translateY(26vh) scale(1) rotateX(0deg); }
+		}
+		.memory-letter-inner {
+			background: var(--paper); padding: 42px 34px 34px; box-shadow: 10px 14px 0 rgba(39,30,39,.14); border: 1px solid var(--ink); position: relative;
+		}
+		.memory-letter-inner:before { content: '♥'; position: absolute; top: -18px; left: 50%; transform: translateX(-50%); width: 36px; height: 36px; border-radius: 50%; background: var(--rose); color: var(--paper); display: grid; place-items: center; font-size: 1rem; box-shadow: 0 0 0 1px var(--ink); }
+		.memory-letter-kicker { margin: 0 0 14px; font: 500 .66rem 'DM Mono', monospace; letter-spacing: .18em; text-transform: uppercase; color: var(--rose); text-align: center; }
+		.memory-letter-body { font: italic 1.15rem/1.7 'DM Serif Display', serif; margin: 0 0 22px; color: var(--ink); }
+		.memory-letter-sign { font: .72rem 'DM Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); text-align: right; margin: 0 0 26px; }
+		.memory-letter-close {
+			display: block; margin: 0 auto; border: 1px solid var(--ink); background: transparent; color: var(--ink); padding: 12px 22px;
+			cursor: pointer; text-transform: uppercase; letter-spacing: .13em; font: 500 .68rem 'DM Mono', monospace; box-shadow: 4px 4px 0 var(--ink); transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+		}
+		.memory-letter-close:hover { background: var(--sun); transform: translate(-2px, -2px); box-shadow: 6px 6px 0 var(--ink); }
+
+		.game-scene {
+			position: fixed; inset: 0; display: none; z-index: 30; background: linear-gradient(180deg, rgba(235,101,93,.98), rgba(223,76,71,.96)); color: var(--paper);
+		}
+		.game-scene.active { display: block; }
+		.game-ui {
+			position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+		}
+		.game-header {
+			position: absolute; top: 36px; left: 50%; transform: translateX(-50%); text-align: center; width: min(90vw, 600px);
+		}
+		.game-header h2 {
+			margin: 0 0 10px; font: 400 clamp(2rem, 5vw, 4rem)/1 'DM Serif Display', serif; letter-spacing: -.03em;
+		}
+		.game-header p {
+			margin: 0; font: 500 .75rem 'DM Mono', monospace; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.84);
+		}
+		.game-score {
+			position: absolute; top: 94px; left: 50%; transform: translateX(-50%); font: 500 .8rem 'DM Mono', monospace; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.9);
+		}
+		.game-board {
+			display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(8px, 1.5vw, 14px); width: min(82vw, 620px); height: min(62vh, 520px); margin-top: 84px; padding: clamp(12px, 2vw, 22px); border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.04); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+		}
+		.game-card {
+			position: relative; min-width: 0; min-height: 0; border: 0; padding: 0; perspective: 700px; background: transparent; color: var(--ink); cursor: pointer;
+		}
+		.game-card-inner {
+			position: absolute; inset: 0; display: grid; place-items: center; transform-style: preserve-3d; transition: transform .42s cubic-bezier(.2,.75,.25,1);
+		}
+		.game-card.flipped .game-card-inner, .game-card.matched .game-card-inner { transform: rotateY(180deg); }
+		.game-card-face {
+			position: absolute; inset: 0; display: grid; place-items: center; backface-visibility: hidden; border: 1px solid rgba(255,255,255,.45); border-radius: 2px; box-shadow: 0 8px 18px rgba(39,30,39,.12);
+		}
+		.game-card-back { background: rgba(255,255,255,.15); color: rgba(255,255,255,.82); font: 1.4rem 'DM Serif Display', serif; }
+		.game-card-back:before { content: '✦'; }
+		.game-card-front { transform: rotateY(180deg); background: var(--paper); color: var(--rose); font-size: clamp(1.5rem, 4vw, 2.5rem); }
+		.game-card.matched .game-card-front { background: var(--sun); }
+		.game-card:focus-visible .game-card-face { outline: 3px solid var(--sun); outline-offset: 3px; }
+		.game-card:disabled { cursor: default; }
+		@media (max-width: 520px) {
+			.game-board { width: min(90vw, 390px); height: min(58vh, 420px); margin-top: 82px; }
+		}
+		.game-end {
+			margin-top: 20px; font: 500 .72rem 'DM Mono', monospace; letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.88);
+		}
+		.gallery-scene {
+			position: fixed; inset: 0; z-index: 40; display: none; overflow: auto; background: #f6c5ab; color: var(--ink); opacity: 0;
+		}
+		.gallery-scene.active { display: block; animation: gallery-reveal .9s ease forwards; }
+		.gallery-scene::before { content: ''; position: fixed; inset: 18px; pointer-events: none; border: 1px solid rgba(39,30,39,.16); transform: rotate(.35deg); }
+		.gallery-scene::after { content: 'made with love  ✦  14.09.22'; position: fixed; right: 5vw; bottom: 24px; color: rgba(39,30,39,.5); font: .62rem 'DM Mono', monospace; letter-spacing: .12em; text-transform: uppercase; transform: rotate(-3deg); }
+		.gallery-heading { position: relative; z-index: 2; width: min(960px, 88vw); margin: 8vh auto 0; }
+		.gallery-kicker { margin: 0 0 10px; color: var(--rose); font: 500 .68rem 'DM Mono', monospace; letter-spacing: .2em; text-transform: uppercase; }
+		.gallery-heading h2 { max-width: 620px; margin: 0; font: 400 clamp(3rem, 8vw, 7rem)/.88 'DM Serif Display', serif; letter-spacing: -.05em; }
+		.gallery-heading p { max-width: 390px; margin: 22px 0 0; color: var(--muted); font: .78rem/1.7 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .08em; }
+		.gallery-wall { position: relative; width: min(1080px, 92vw); min-height: 820px; margin: 5vh auto 12vh; }
+		.gallery-wall::before { content: ''; position: absolute; inset: -30px -4vw; pointer-events: none; opacity: .24; background-image: radial-gradient(circle, var(--rose) 1px, transparent 1.5px); background-size: 24px 24px; mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent); animation: pattern-drift 16s linear infinite; }
+		.gallery-wall::after { content: '♡  keep choosing us  ♡'; position: absolute; left: 2%; bottom: 2%; color: rgba(39,30,39,.48); font: .65rem 'DM Mono', monospace; letter-spacing: .12em; text-transform: uppercase; transform: rotate(-7deg); }
+		.gallery-confetti { position: absolute; z-index: 1; pointer-events: none; color: var(--rose); font: 1.4rem 'DM Serif Display', serif; animation: confetti-dance 4.8s ease-in-out infinite; }
+		.gallery-confetti.c1 { left: 13%; top: 12%; color: var(--sun); }.gallery-confetti.c2 { right: 29%; top: 3%; animation-delay: .7s; }.gallery-confetti.c3 { right: 1%; top: 52%; color: var(--blue); animation-delay: 1.4s; }.gallery-confetti.c4 { left: 48%; bottom: 3%; color: var(--rose); animation-delay: 2.1s; }
+		.gallery-tape { position: absolute; z-index: 7; width: 78px; height: 22px; background: rgba(255,211,101,.62); box-shadow: 0 1px 2px rgba(39,30,39,.08); opacity: .88; }
+		.gallery-tape.tape-a { left: 35%; top: -10px; transform: rotate(-4deg); }.gallery-tape.tape-b { right: 7%; top: 330px; transform: rotate(8deg); background: rgba(183,216,215,.72); }
+		.music-toggle { position: fixed; right: 24px; bottom: 22px; z-index: 60; border: 1px solid var(--ink); padding: 10px 14px; color: var(--ink); background: var(--paper); box-shadow: 4px 4px 0 var(--ink); cursor: pointer; font: 500 .65rem 'DM Mono', monospace; letter-spacing: .1em; text-transform: uppercase; transition: transform .2s ease, background-color .2s ease; }
+		.music-toggle:hover { background: var(--sun); transform: translate(-2px, -2px); }
+		.music-toggle.is-playing { background: var(--blue); }
+		.gallery-card { position: absolute; width: clamp(150px, 20vw, 220px); padding: 10px 10px 16px; background: var(--paper); box-shadow: 8px 12px 0 rgba(39,30,39,.14); opacity: 0; transform: translateY(30px) rotate(var(--tilt)); animation: gallery-card-in .7s var(--delay) cubic-bezier(.2,.8,.2,1) forwards; z-index: 1; }
+		.gallery-card--small { width: clamp(150px, 18vw, 220px); }
+		.gallery-card--wide { width: clamp(260px, 28vw, 360px); height: clamp(260px, 28vw, 360px); }
+		.gallery-card--strip {
+			width: clamp(240px, 28vw, 340px); padding: 0; background: transparent; box-shadow: none; border: 0; overflow: visible;
+		}
+		.gallery-card--strip .gallery-picture {
+			height: clamp(150px, 18vw, 210px); border: 0; box-shadow: none; background: transparent; border-radius: 0; overflow: visible;
+		}
+		.gallery-card:nth-child(1) { left: 2.5%; top: 90px; --tilt: -9deg; --delay: .15s; z-index: 3; }
+		.gallery-card:nth-child(2) { left: 24%; top: 18px; --tilt: 0deg; --delay: .28s; z-index: 5; }
+		.gallery-card:nth-child(3) { right: 6%; top: 96px; --tilt: 8deg; --delay: .4s; z-index: 4; }
+		.gallery-card:nth-child(4) { left: 9%; top: 300px; --tilt: -7deg; --delay: .52s; z-index: 2; }
+		.gallery-card:nth-child(5) { right: 15%; top: 322px; --tilt: 5deg; --delay: .64s; z-index: 2; }
+		.gallery-card:nth-child(6) { left: 38%; bottom: 220px; --tilt: -3deg; --delay: .76s; z-index: 3; }
+		.gallery-picture { display: grid; place-items: center; height: clamp(145px, 19vw, 205px); border: 1px solid rgba(39,30,39,.16); color: rgba(39,30,39,.72); font-size: clamp(2.8rem, 6vw, 4.7rem); overflow: hidden; }
+		.gallery-card--wide .gallery-picture { height: clamp(220px, 26vw, 320px); }
+		.gallery-poem {
+			position: absolute; left: 5%; top: 610px; z-index: 6; width: 180px; margin: 0; padding: 14px 12px; color: var(--ink); background: rgba(255,249,243,.88); border: 1px solid rgba(39,30,39,.14); box-shadow: 5px 7px 0 rgba(39,30,39,.1); transform: rotate(-4deg);
+			font: 400 1.15rem/1.2 'DM Serif Display', serif; text-align: center; text-wrap: balance;
+		}
+		.gallery-poem::before, .gallery-poem::after { color: var(--rose); font: 1.1rem 'DM Mono', monospace; }
+		.gallery-poem::before { content: '“'; margin-right: 3px; }
+		.gallery-poem::after { content: '”'; margin-left: 3px; }
+		.gallery-sticker {
+			position: absolute; display: grid; place-items: center; color: var(--ink); z-index: 2; font-family: 'DM Serif Display', serif; user-select: none;
+			text-shadow: 2px 2px 0 rgba(255,255,255,.8);
+		}
+		.gallery-sticker.star { left: 3%; top: 2%; font-size: 3.3rem; transform: rotate(-18deg); }
+		.gallery-sticker.heart { right: 5%; top: 18%; font-size: 2.8rem; transform: rotate(16deg); }
+		.gallery-sticker.paw { left: 19%; bottom: 5%; font-size: 2.9rem; transform: rotate(-10deg); }
+		.gallery-sticker.spark { right: 18%; bottom: 8%; font-size: 2.2rem; transform: rotate(10deg); }
+		.gallery-picture img, .memory-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+		.gallery-card:nth-child(1) .gallery-picture { background: linear-gradient(135deg, #ffd365 0 48%, #b7d8d7 48%); }
+		.gallery-card:nth-child(2) .gallery-picture { background: linear-gradient(155deg, #b7d8d7, #fff9f3 55%, #ee6f65 55%); }
+		.gallery-card:nth-child(3) .gallery-picture { background: linear-gradient(135deg, #ee6f65, #f6c5ab 52%, #ffd365 52%); }
+		.gallery-card:nth-child(4) .gallery-picture { background: linear-gradient(25deg, #fff9f3 0 42%, #b7d8d7 42% 70%, #ffd365 70%); }
+		.gallery-card:nth-child(5) .gallery-picture { background: linear-gradient(135deg, #ffd365, #ee6f65 60%, #271e27 60%); }
+		.gallery-card:nth-child(6) .gallery-picture { background: linear-gradient(160deg, #b7d8d7 0 50%, #ee6f65 50%); }
+		.gallery-card:nth-child(7) .gallery-picture { background: linear-gradient(135deg, #ee6f65 0 35%, #fff9f3 35% 65%, #ffd365 65%); }
+		.gallery-card--strip img {
+			width: 100%;
+			height: auto;
+			display: block;
+			object-fit: contain;
+			background: #f4efe8;
+			box-shadow: none;
+			border-radius: 0;
+		}
+		.gallery-caption { display: none; margin-top: 12px; font: 500 .65rem/1.45 'DM Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
+		@keyframes gallery-reveal { from { opacity: 0; } to { opacity: 1; } }
+		@keyframes gallery-card-in { from { opacity: 0; transform: translateY(30px) rotate(0); } to { opacity: 1; transform: translateY(0) rotate(var(--tilt)); } }
+		@keyframes pattern-drift { from { transform: translateY(0); } to { transform: translateY(24px); } }
+		@keyframes confetti-dance { 0%, 100% { transform: translateY(0) rotate(-10deg); opacity: .55; } 50% { transform: translateY(-14px) rotate(14deg) scale(1.15); opacity: 1; } }
+		@keyframes chibi-picture-float { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-12px) rotate(3deg); } }
+		@keyframes chibi-heart-pulse { 0%, 100% { transform: translate(-50%, 0) scale(.9); opacity: .7; } 50% { transform: translate(-50%, -9px) scale(1.15); opacity: 1; } }
+		.gallery-chibi-picture { position: absolute; left: 20%; bottom: 5%; z-index: 6; width: clamp(150px, 22vw, 250px); margin: 0; animation: chibi-picture-float 4.8s ease-in-out infinite; }
+		.gallery-chibi-picture img { width: 100%; height: auto; display: block; mix-blend-mode: multiply; }
+		.gallery-chibi-picture::before { content: '♥'; position: absolute; left: 50%; top: -28px; color: var(--rose); font: 1.8rem 'DM Serif Display', serif; animation: chibi-heart-pulse 2.2s ease-in-out infinite; }
+		.gallery-chibi-picture::after { content: '✦  ✦'; position: absolute; left: 50%; bottom: -14px; width: max-content; color: var(--sun); font: 1rem 'DM Mono', monospace; transform: translateX(-50%); animation: shimmer 2.8s ease-in-out infinite; }
+		@media (max-width: 720px) {
+			.gallery-heading { margin-top: 10vh; }
+			.gallery-wall { min-height: 920px; margin-top: 8vh; }
+			.gallery-card { width: 43vw; }
+			.gallery-poem { left: 5%; top: 690px; width: 36vw; font-size: 1rem; }
+			.gallery-card:nth-child(1) { left: 0; top: 0; }
+			.gallery-card:nth-child(2) { left: 43%; top: 100px; }
+			.gallery-card:nth-child(3) { left: 6%; top: 240px; }
+			.gallery-card:nth-child(4) { right: 0; top: 330px; }
+			.gallery-card:nth-child(5) { left: 0; top: 500px; }
+			.gallery-card:nth-child(6) { left: 43%; top: 590px; }
+			.gallery-card:nth-child(7) { right: 3%; top: 760px; }
+		}
+
+		.footer { padding: 25px 5vw; border-top: 1px solid var(--line); display: flex; justify-content: space-between; font: .68rem 'DM Mono'; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
+		@media (max-width: 720px) {
+			.memory-card { width: 170px; }
+			.memory-photo { height: 130px; }
+			.memory-letter-body { font-size: 1rem; }
+		}
+	</style>
+</head>
+<body>
+	<div class="intro-screen" id="introScreen" role="dialog" aria-modal="true" aria-labelledby="introTitle">
+		<div class="intro-corner top">M + K / 14.09.22</div><div class="intro-corner bottom">four years<br>still choosing you</div><div class="intro-orbit"></div><div class="intro-stamp">04</div><div class="intro-spark spark-a">✦</div><div class="intro-spark spark-b">✦</div><div class="intro-spark spark-c">✧</div>
+		<div class="intro-copy"><div class="intro-kicker">for my favorite person</div><h1 class="intro-title" id="introTitle">HAPPY ANNIVERSARY,<em>BABY!</em></h1><button class="intro-prompt" id="continueButton">click to continue <span aria-hidden="true">→</span></button></div>
+		<div id="introPieces" aria-hidden="true"></div>
+	</div>
+	<div class="grain"></div>
+	<div class="ambient-layer" aria-hidden="true">
+		<span class="ambient-orb orb-1"></span>
+		<span class="ambient-orb orb-2"></span>
+		<span class="ambient-orb orb-3"></span>
+		<span class="float-badge badge-1" style="--spin:-12deg;">♥</span>
+		<span class="float-badge badge-2" style="--spin:16deg;">✦</span>
+		<span class="float-badge badge-3" style="--spin:-18deg;">☀</span>
+		<span class="float-badge badge-4" style="--spin:10deg;">✧</span>
+		<span class="float-badge badge-5" style="--spin:8deg;">♡</span>
+		<span class="float-badge badge-6" style="--spin:-10deg;">★</span>
+	</div>
+	<div class="chibi left" aria-hidden="true"><span class="chibi-head"><span class="chibi-face"></span></span><span class="chibi-body"></span></div>
+	<div class="chibi right" aria-hidden="true"><span class="chibi-head"><span class="chibi-face"></span></span><span class="chibi-body"></span></div>
+	<header class="topbar"><div class="brand">M + K</div><div class="year">14.09.22</div></header>
+
+	<div class="memory-scene" id="memoryScene" aria-live="polite">
+		<div class="memory-card" id="memoryCard" tabindex="0" role="button" aria-label="Click to start the game">
+			<div class="memory-photo"><img src="images/first-date.jpg" alt="Our first date" /></div>
+			<div class="memory-caption">first date</div>
+		</div>
+		<div class="memory-letter" id="memoryLetter" aria-hidden="true">
+			<div class="memory-letter-inner">
+				<p class="memory-letter-kicker">TO MY FAVORITE PERSON</p>
+				<p class="memory-letter-body">Those 4 years I spent time with you were an absolute dream. Yes, we had a lot of arguments. But those arguments made us stronger. They say 4 years are already long. But to me, it's still short. Do you want to know why? It's because I want to build something with you; I want to experience more with you, travel with you, and be with you after this anniversary. My only fulfillment is you.</p>
+				<p class="memory-letter-sign">— yours, always<br>M</p>
+				<button class="memory-letter-close" id="letterClose">continue ↓</button>
+			</div>
+		</div>
+		<div class="burst-layer" id="burstLayer" aria-hidden="true"></div>
+	</div>
+
+	<div class="game-scene" id="gameScene" aria-live="polite">
+		<div class="game-ui">
+			<div class="game-header">
+				<h2>memory chase</h2>
+				<p>find the matching memories</p>
+			</div>
+			<div class="game-score" id="gameScore">0 pairs · 0 moves</div>
+			<div class="game-board" id="gameBoard" aria-label="Mini game board"></div>
+			<div class="game-end" id="gameEnd">match every pair</div>
+		</div>
+	</div>
+	<div class="gallery-scene" id="galleryScene" aria-live="polite">
+		<div class="gallery-heading">
+			<p class="gallery-kicker">you found every one</p>
+			<h2>Look at us,<br>still becoming.</h2>
+			<p>A small archive of the ordinary moments that became our favorite life.</p>
+		</div>
+		<div class="gallery-wall">
+			<figure class="gallery-card gallery-card--small"><div class="gallery-picture"><img src="images/first-date.jpg" alt="First date" /></div></figure>
+			<figure class="gallery-card gallery-card--wide"><div class="gallery-picture"><img src="images/0aa28095-3277-4c52-bcd9-88861bee5a8f.jpg" alt="Memory photo 2" /></div></figure>
+			<figure class="gallery-card gallery-card--small"><div class="gallery-picture"><img src="images/57717813-607a-4c4d-8ca8-badd3abe8322.jpg" alt="Memory photo 3" /></div></figure>
+			<figure class="gallery-card gallery-card--small"><div class="gallery-picture"><img src="images/8530ac44-3bca-4bff-ad8e-64ab55035f6c.jpg" alt="Memory photo 4" /></div></figure>
+			<figure class="gallery-card gallery-card--strip" style="left: auto; right: 2%; top: 410px; transform: rotate(-2deg); --tilt: -2deg; --delay: .78s; z-index: 2;">
+				<div class="gallery-picture" style="overflow: visible; height: auto; aspect-ratio: auto;">
+					<img src="images/snapstrip (2).jpg" alt="Snapstrip memory" style="border-radius:0; box-shadow:none; object-fit:contain; width:100%; height:auto; display:block; background:#f4efe8;" />
+				</div>
+			</figure>
+			<figure class="gallery-card gallery-card--small"><div class="gallery-picture"><img src="images/f5df08fe-a22a-4115-953f-2b7abb435333.jpg" alt="Memory photo 5" /></div></figure>
+			<p class="gallery-poem">Not even Evangeline can compare to how you light up my world.<br /><br />You're the only comfort I needed most, the one I can be vulnerable with. My love for you is too much, to the point that I can't express it in words.</p>
+			<figure class="gallery-chibi-picture" aria-label="Cute couple chibi illustration"><img src="images/Screenshot 2026-09-17 200554.png" alt="Cute chibi couple sharing a flower" /></figure>
+			<div class="gallery-chibi chibi" aria-hidden="true"><span class="chibi-head"><span class="chibi-face"></span></span><span class="chibi-body"></span></div>
+			<span class="gallery-sticker star" aria-hidden="true">✦</span>
+			<span class="gallery-sticker heart" aria-hidden="true">♥</span>
+			<span class="gallery-sticker paw" aria-hidden="true">◕</span>
+			<span class="gallery-sticker spark" aria-hidden="true">✧</span>
+			<span class="gallery-confetti c1" aria-hidden="true">✦</span>
+			<span class="gallery-confetti c2" aria-hidden="true">♡</span>
+			<span class="gallery-confetti c3" aria-hidden="true">✧</span>
+			<span class="gallery-confetti c4" aria-hidden="true">♥</span>
+			<span class="gallery-tape tape-a" aria-hidden="true"></span>
+			<span class="gallery-tape tape-b" aria-hidden="true"></span>
+		</div>
+	</div>
+	<audio id="backgroundMusic" loop preload="metadata" src="music/Princess and the Frog - Ma Belle Evangeline.mp3"></audio>
+	<button class="music-toggle" id="musicToggle" type="button" aria-label="Play background music">♫ music off</button>
+
+	<main>
+		<div style="min-height: 100vh; display: grid; place-items: center; background: transparent;"></div>
+	</main>
+	<script>
+		const introScreen = document.getElementById('introScreen');
+		const introPieces = document.getElementById('introPieces');
+		const stickerPool = ['♥', '✦', '✧', '☀', '♡', '★', '✿', '•'];
+		const ambientLayer = document.querySelector('.ambient-layer');
+		const memoryScene = document.getElementById('memoryScene');
+		const memoryCard = document.getElementById('memoryCard');
+		const memoryLetter = document.getElementById('memoryLetter');
+		const burstLayer = document.getElementById('burstLayer');
+		const letterClose = document.getElementById('letterClose');
+		const gameScene = document.getElementById('gameScene');
+		const gameBoard = document.getElementById('gameBoard');
+		const gameScore = document.getElementById('gameScore');
+		const gameEnd = document.getElementById('gameEnd');
+		const galleryScene = document.getElementById('galleryScene');
+		const backgroundMusic = document.getElementById('backgroundMusic');
+		const musicToggle = document.getElementById('musicToggle');
+
+		function updateMusicButton() {
+			const playing = !backgroundMusic.paused;
+			musicToggle.classList.toggle('is-playing', playing);
+			musicToggle.textContent = playing ? '♫ music on' : '♫ music off';
+			musicToggle.setAttribute('aria-label', playing ? 'Pause background music' : 'Play background music');
+		}
+
+		async function toggleMusic() {
+			if (backgroundMusic.paused) {
+				try { await backgroundMusic.play(); } catch (error) { musicToggle.textContent = '♫ add music'; }
+			} else {
+				backgroundMusic.pause();
+			}
+			updateMusicButton();
+		}
+
+		musicToggle.addEventListener('click', toggleMusic);
+		backgroundMusic.addEventListener('play', updateMusicButton);
+		backgroundMusic.addEventListener('pause', updateMusicButton);
+
+		function addFloatStickers() {
+			for (let index = 0; index < 16; index += 1) {
+				const sticker = document.createElement('span');
+				sticker.className = 'float-badge';
+				sticker.textContent = stickerPool[index % stickerPool.length];
+				sticker.style.left = `${6 + Math.random() * 88}%`;
+				sticker.style.top = `${10 + Math.random() * 78}%`;
+				sticker.style.setProperty('--spin', `${(Math.random() - .5) * 30}deg`);
+				sticker.style.animationDelay = `${Math.random() * 2.6}s`;
+				sticker.style.animationDuration = `${5 + Math.random() * 6}s`;
+				sticker.style.opacity = `${.44 + Math.random() * .36}`;
+				sticker.style.transform = `rotate(${(Math.random() - .5) * 32}deg)`;
+				ambientLayer.appendChild(sticker);
+			}
+		}
+
+		document.body.classList.add('intro-locked');
+		addFloatStickers();
+		for (let index = 0; index < 34; index += 1) {
+			const piece = document.createElement('span');
+			piece.className = `intro-piece${index % 3 === 0 ? ' heart' : ''}`;
+			piece.textContent = index % 3 === 0 ? '♥' : (index % 2 === 0 ? '✦' : '•');
+			piece.style.setProperty('--left', `${Math.random() * 100}%`);
+			piece.style.setProperty('--size', `${.8 + Math.random() * 1.6}rem`);
+			piece.style.setProperty('--color', ['#ee6f65', '#ffd365', '#b7d8d7', '#271e27'][index % 4]);
+			piece.style.setProperty('--duration', `${4 + Math.random() * 5}s`);
+			piece.style.setProperty('--delay', `${Math.random() * -7}s`);
+			piece.style.setProperty('--drift', `${(Math.random() - .5) * 24}vw`);
+			piece.style.setProperty('--rotate', `${(Math.random() - .5) * 50}deg`);
+			introPieces.appendChild(piece);
+		}
+
+		document.getElementById('continueButton').addEventListener('click', () => {
+			backgroundMusic.play().catch(() => {});
+			introScreen.classList.add('leaving');
+			document.body.classList.add('red-stage');
+			document.body.classList.remove('intro-locked');
+			setTimeout(() => introScreen.remove(), 850);
+		});
+
+		const cardSymbols = ['♥', '✦', '✧', '★', '☀', '♡', '✿', '∞'];
+		let matchedPairs = 0;
+		let moves = 0;
+		let firstCard = null;
+		let secondCard = null;
+		let lockBoard = false;
+		let gameRunning = false;
+
+		function spawnBurst() {
+			const symbols = ['♥', '✦', '✧', '•'];
+			const colors = ['#ee6f65', '#ffd365', '#b7d8d7', '#271e27'];
+			for (let i = 0; i < 18; i += 1) {
+				const piece = document.createElement('span');
+				piece.className = 'burst-piece';
+				piece.textContent = symbols[i % symbols.length];
+				const angle = Math.random() * Math.PI * 2;
+				const dist = 60 + Math.random() * 130;
+				piece.style.setProperty('--bx', `${Math.cos(angle) * dist}px`);
+				piece.style.setProperty('--by', `${Math.sin(angle) * dist}px`);
+				piece.style.setProperty('--bsize', `${.7 + Math.random() * 1.3}rem`);
+				piece.style.setProperty('--bcolor', colors[i % colors.length]);
+				piece.style.top = '32vh';
+				burstLayer.appendChild(piece);
+				piece.addEventListener('animationend', () => piece.remove());
+			}
+		}
+
+		function startGame() {
+			if (gameRunning) return;
+			gameRunning = true;
+			matchedPairs = 0;
+			moves = 0;
+			firstCard = null;
+			secondCard = null;
+			lockBoard = false;
+			gameScore.textContent = '0 pairs · 0 moves';
+			gameEnd.textContent = 'match every pair';
+			memoryScene.style.opacity = '0';
+			memoryScene.style.visibility = 'hidden';
+			memoryScene.style.pointerEvents = 'none';
+			gameScene.classList.add('active');
+			buildBoard();
+		}
+
+		function buildBoard() {
+			gameBoard.replaceChildren();
+			const shuffledSymbols = [...cardSymbols, ...cardSymbols].sort(() => Math.random() - .5);
+			shuffledSymbols.forEach((symbol, index) => {
+				const card = document.createElement('button');
+				card.type = 'button';
+				card.className = 'game-card';
+				card.dataset.symbol = symbol;
+				card.setAttribute('aria-label', `Memory card ${index + 1}, face down`);
+				card.innerHTML = `<span class="game-card-inner"><span class="game-card-face game-card-back" aria-hidden="true"></span><span class="game-card-face game-card-front" aria-hidden="true">${symbol}</span></span>`;
+				card.addEventListener('click', () => flipCard(card));
+				gameBoard.appendChild(card);
+			});
+		}
+
+		function flipCard(card) {
+			if (lockBoard || card === firstCard || card.classList.contains('matched')) return;
+			card.classList.add('flipped');
+			card.setAttribute('aria-label', `Memory card, ${card.dataset.symbol}`);
+			if (!firstCard) {
+				firstCard = card;
+				return;
+			}
+			secondCard = card;
+			moves += 1;
+			gameScore.textContent = `${matchedPairs} pairs · ${moves} moves`;
+			if (firstCard.dataset.symbol === secondCard.dataset.symbol) {
+				firstCard.classList.add('matched');
+				secondCard.classList.add('matched');
+				matchedPairs += 1;
+				gameScore.textContent = `${matchedPairs} pairs · ${moves} moves`;
+				spawnBurst();
+				resetTurn();
+				if (matchedPairs === cardSymbols.length) finishGame();
+				return;
+			}
+			lockBoard = true;
+			setTimeout(() => {
+				firstCard.classList.remove('flipped');
+				secondCard.classList.remove('flipped');
+				resetTurn();
+			}, 720);
+		}
+
+		function resetTurn() {
+			[firstCard, secondCard] = [null, null];
+			lockBoard = false;
+		}
+
+		function finishGame() {
+			gameEnd.textContent = `you did it in ${moves} moves · click to play again`;
+			gameRunning = false;
+			gameBoard.querySelectorAll('.game-card').forEach((card) => { card.disabled = true; });
+			setTimeout(() => {
+				gameScene.classList.remove('active');
+				galleryScene.classList.add('active');
+			}, 1100);
+		}
+
+		let letterOpened = false;
+		function openLetter() {
+			if (letterOpened) return;
+			letterOpened = true;
+			memoryCard.classList.add('popping');
+			spawnBurst();
+			setTimeout(() => {
+				memoryCard.style.display = 'none';
+				memoryLetter.classList.add('visible');
+				memoryLetter.setAttribute('aria-hidden', 'false');
+			}, 480);
+		}
+
+		memoryCard.addEventListener('click', () => {
+			openLetter();
+		});
+		memoryCard.addEventListener('keydown', (event) => {
+			if (event.key === 'Enter' || event.key === ' ') {
+				event.preventDefault();
+				memoryCard.click();
+			}
+		});
+
+		letterClose.addEventListener('click', () => {
+			memoryScene.style.opacity = '0';
+			memoryScene.style.visibility = 'hidden';
+			memoryScene.style.pointerEvents = 'none';
+			startGame();
+		});
+	</script>
+</body>
+</html>
